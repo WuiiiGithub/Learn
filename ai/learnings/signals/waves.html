@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signal Math Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; }
+        .slider-container { display: flex; flex-direction: column; gap: 0.25rem; }
+        input[type=range] { accent-color: #3b82f6; cursor: pointer; }
+        .math-display { font-size: 1.3rem; padding: 1rem; background: #1e293b; border-radius: 0.5rem; text-align: center; border: 1px solid #334155; min-height: 70px; display: flex; align-items: center; justify-content: center; overflow-x: auto; }
+        .math-static { background: #0f172a; border-color: #475569; }
+        canvas { background-color: #020617; border-radius: 0.5rem; border: 1px solid #334155; width: 100%; height: 260px; box-shadow: inset 0 0 15px rgba(0,0,0,0.7); }
+        .legend-box { background: rgba(30, 41, 59, 0.5); border: 1px solid #334155; border-radius: 0.5rem; padding: 1rem; font-size: 0.875rem; }
+        .legend-box li { margin-bottom: 0.5rem; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+<div class="max-w-6xl mx-auto space-y-10">
+
+    <header>
+        <h1 class="text-4xl font-extrabold text-white mb-2 tracking-tight">Fundamental Signal Math</h1>
+        <p class="text-slate-400">Interact with theoretical equations, observe the dynamic calculations, and understand the physical variables.</p>
+    </header>
+
+    <!-- MODULE 1: WAVE EQUATION -->
+    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-6">
+        <div>
+            <h2 class="text-2xl font-bold text-blue-400">1. The Anatomy of a Wave</h2>
+            <p class="text-sm text-slate-400 mt-1">The fundamental equation mapping circular motion (phase) to linear amplitude over time \(t\).</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="col-span-2 space-y-4">
+                <div>
+                    <h3 class="text-xs font-bold text-slate-500 uppercase mb-1">Theoretical Formula</h3>
+                    <div class="math-display math-static text-slate-300">
+                        $$ y(t) = A \cdot \left( \sin(2\pi f t + \phi) \right)^p + D $$
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-xs font-bold text-slate-500 uppercase mb-1">Dynamic Calculation</h3>
+                    <div id="wave-math-dynamic" class="math-display text-blue-200"></div>
+                </div>
+            </div>
+
+            <div class="legend-box">
+                <h3 class="text-sm font-bold text-blue-400 uppercase tracking-wider mb-3">Variable Glossary</h3>
+                <ul class="text-slate-300">
+                    <li><strong class="text-white">\(A\) (Amplitude):</strong> The peak physical magnitude. Controls how tall the wave is.</li>
+                    <li><strong class="text-white">\(f\) (Frequency):</strong> How many cycles occur per second (Hz).</li>
+                    <li><strong class="text-white">\(\phi\) (Phase):</strong> Horizontal shift — where in the cycle the wave starts at \(t=0\).</li>
+                    <li><strong class="text-white">\(D\) (DC Offset):</strong> Vertical shift of the entire wave. Moves the center baseline up or down.</li>
+                    <li><strong class="text-pink-400">\(p\) (Exponent):</strong> Morphs the wave shape. \(p=1\) → pure sine. \(p=2\) → all-positive squared wave. Negative \(p\) → inverted/divided. Non-integer → smooth distortions.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Visual Plot -->
+        <canvas id="wave-canvas"></canvas>
+
+        <!-- Sliders -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-6 bg-slate-800 p-4 rounded-xl">
+            <div class="slider-container">
+                <label class="text-xs text-slate-300 flex justify-between"><span>Amplitude (\(A\))</span> <span id="val-A" class="font-mono text-blue-400"></span></label>
+                <input type="range" id="slide-A" min="0" max="5" step="0.1" value="2.0">
+            </div>
+            <div class="slider-container">
+                <label class="text-xs text-slate-300 flex justify-between"><span>Frequency (\(f\))</span> <span id="val-f" class="font-mono text-blue-400"></span></label>
+                <input type="range" id="slide-f" min="0.1" max="5" step="0.1" value="1.0">
+            </div>
+            <div class="slider-container">
+                <label class="text-xs text-slate-300 flex justify-between"><span>Phase (\(\phi\))</span> <span id="val-phi" class="font-mono text-blue-400"></span></label>
+                <input type="range" id="slide-phi" min="-3.14" max="3.14" step="0.1" value="0">
+            </div>
+            <div class="slider-container">
+                <label class="text-xs text-slate-300 flex justify-between"><span>DC Offset (\(D\))</span> <span id="val-D" class="font-mono text-blue-400"></span></label>
+                <input type="range" id="slide-D" min="-5" max="5" step="0.5" value="0">
+            </div>
+            <div class="slider-container">
+                <label class="text-xs text-pink-300 flex justify-between font-bold"><span>Exponent (\(p\))</span> <span id="val-p" class="font-mono text-pink-400"></span></label>
+                <input type="range" id="slide-p" min="-3" max="3" step="0.5" value="1" class="accent-pink-500">
+            </div>
+        </div>
+    </section>
+
+    <!-- MODULE 2: STATISTICAL MOMENTS -->
+    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-6">
+        <div>
+            <h2 class="text-2xl font-bold text-emerald-400">2. The Master Moment Equation</h2>
+            <p class="text-sm text-slate-400 mt-1">Variance, Skewness, and Kurtosis are the same equation raised to different powers. Upload a CSV or use the data generator to test it.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="col-span-2 space-y-4">
+                <div>
+                    <h3 class="text-xs font-bold text-slate-500 uppercase mb-1">Theoretical Formula (Central Moments)</h3>
+                    <div class="math-display math-static text-slate-300">
+                        $$ M_p = \frac{1}{N - k} \sum_{i=1}^{N} \left( \frac{x_i - \mu}{\sigma_{\text{scale}}} \right)^p $$
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-xs font-bold text-slate-500 uppercase mb-1">Dynamic Calculation (<span id="moment-name-title" class="text-emerald-400">Variance</span>)</h3>
+                    <div id="moment-math-dynamic" class="math-display text-emerald-200"></div>
+                </div>
+            </div>
+
+            <div class="legend-box">
+                <h3 class="text-sm font-bold text-emerald-400 uppercase tracking-wider mb-3">Variable Glossary</h3>
+                <ul class="text-slate-300">
+                    <li><strong class="text-white">\(N\):</strong> Total number of data points.</li>
+                    <li><strong class="text-white">\(k\):</strong> Bessel's correction. (\(k=1\) for samples, \(k=0\) for full populations).</li>
+                    <li><strong class="text-white">\(x_i\):</strong> The value of the signal at index \(i\).</li>
+                    <li><strong class="text-white">\(\mu\):</strong> The mean (average) of the entire signal.</li>
+                    <li><strong class="text-white">\(\sigma_{\text{scale}}\):</strong> Scaling denominator. For Variance (\(p=2\)): set to 1 (no scaling). For Skewness/Kurtosis (\(p>2\)): set to \(\sigma\) (std dev) so the result is scale-invariant and unit-free.</li>
+                    <li><strong class="text-pink-400">\(p\) (Power):</strong> \(p=2\) → Spread/Variance. \(p=3\) → Asymmetry/Skewness. \(p=4\) → Tail heaviness/Kurtosis.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            
+            <!-- Visual Plot -->
+            <div class="col-span-3 space-y-2 relative">
+                <div class="flex justify-between items-end">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase">Signal Data & Distribution</h3>
+                    <div class="text-xs text-slate-400 flex gap-4">
+                        <span><span class="inline-block w-6 h-0.5 bg-orange-400 align-middle mr-1"></span>Mean (μ) = <span id="live-mu" class="text-orange-300 font-mono">0.00</span></span>
+                        <span><span class="inline-block w-4 border-t border-dashed border-slate-400 align-middle mr-1"></span>±1σ = <span id="live-sigma" class="text-slate-300 font-mono">1.00</span></span>
+                    </div>
+                </div>
+                <canvas id="moment-canvas"></canvas>
+            </div>
+
+            <!-- Equation Results -->
+            <div class="space-y-4 bg-slate-800 p-4 rounded-xl flex flex-col justify-center">
+                <div class="text-center p-4 bg-slate-900 rounded-lg border border-slate-700 shadow-inner">
+                    <div class="text-xs text-slate-400 uppercase tracking-widest mb-1">Result</div>
+                    <div class="text-4xl font-mono font-bold text-emerald-400" id="moment-result">0.00</div>
+                </div>
+                
+                <div class="slider-container mt-4">
+                    <label class="text-xs text-pink-300 flex justify-between font-bold">
+                        <span>Mathematical Power (\(p\))</span> <span id="val-mp" class="font-mono"></span>
+                    </label>
+                    <input type="range" id="slide-mp" min="2" max="4" step="1" value="2" class="accent-pink-500">
+                </div>
+                <div class="slider-container">
+                    <label class="text-xs text-slate-300 flex justify-between">
+                        <span>Bessel's Correction (\(k\))</span> <span id="val-k" class="font-mono"></span>
+                    </label>
+                    <input type="range" id="slide-k" min="0" max="1" step="1" value="0" class="accent-emerald-500">
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Manipulation Controls -->
+        <div class="bg-slate-800 p-4 rounded-xl space-y-4">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 pb-4 border-b border-slate-700">
+                <h3 class="font-bold text-white text-sm uppercase tracking-wider">Data Generator & Importer</h3>
+                <div class="flex gap-2 items-center">
+                    <input type="file" id="csv-upload" accept=".csv" class="text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                    <button id="btn-clear-csv" class="hidden px-3 py-1 bg-red-900 text-red-200 rounded-lg text-sm hover:bg-red-800">Clear CSV</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="synthetic-controls">
+                <div class="space-y-4">
+                    <h4 class="text-xs text-emerald-400 font-bold">1. Target Distribution</h4>
+                    <div class="slider-container">
+                        <label class="text-xs text-slate-300 flex justify-between"><span>Sample Size (\(N\))</span> <span id="val-N" class="font-mono"></span></label>
+                        <input type="range" id="slide-N" min="50" max="1000" step="10" value="300" class="accent-emerald-500">
+                    </div>
+                    <div class="slider-container">
+                        <label class="text-xs text-slate-300 flex justify-between"><span>Target Mean (\(\mu\))</span> <span id="val-mean" class="font-mono"></span></label>
+                        <input type="range" id="slide-mean" min="-20" max="20" step="1" value="0" class="accent-emerald-500">
+                    </div>
+                    <div class="slider-container">
+                        <label class="text-xs text-slate-300 flex justify-between"><span>Target StdDev (\(\sigma\))</span> <span id="val-std" class="font-mono"></span></label>
+                        <input type="range" id="slide-std" min="1" max="15" step="0.5" value="3" class="accent-emerald-500">
+                    </div>
+                </div>
+
+                <div class="space-y-4 col-span-2">
+                    <h4 class="text-xs text-pink-400 font-bold">2. Inject Physical Behaviors (Shape)</h4>
+                    <p class="text-xs text-slate-400 mb-2">Changing Skew or Outliers alters the shape, but the generator scales everything to preserve your Target \(\mu\) and \(\sigma\).</p>
+                    
+                    <div class="slider-container">
+                        <label class="text-xs text-slate-300 flex justify-between"><span>Asymmetry Bias (Drives Skewness)</span> <span id="val-asym" class="font-mono"></span></label>
+                        <input type="range" id="slide-asym" min="-5" max="5" step="0.1" value="0">
+                    </div>
+                    <div class="slider-container">
+                        <label class="text-xs text-slate-300 flex justify-between"><span>Inject Severe Outliers (Drives Kurtosis)</span> <span id="val-outliers" class="font-mono"></span></label>
+                        <input type="range" id="slide-outliers" min="0" max="20" step="1" value="0">
+                    </div>
+                </div>
+            </div>
+            <div id="csv-status" class="hidden text-sm text-blue-400 font-bold text-center py-4 bg-slate-900 rounded-lg">
+                Using imported CSV data. Synthetic controls disabled.
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<script>
+    const signedPow = (val, power) => Math.sign(val) * Math.pow(Math.abs(val), power);
+    
+    const renderInlineMath = () => {
+        if (typeof renderMathInElement === 'function') {
+            renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '\\(', right: '\\)', display: false}]});
+        }
+    };
+
+    function resizeCanvas(canvas) {
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = 260;
+    }
+
+    // ==================== MODULE 1: WAVE ====================
+    const waveCanvas = document.getElementById('wave-canvas');
+    const waveCtx = waveCanvas.getContext('2d');
+    
+    function drawWave() {
+        const A = parseFloat(document.getElementById('slide-A').value);
+        const f = parseFloat(document.getElementById('slide-f').value);
+        const phi = parseFloat(document.getElementById('slide-phi').value);
+        const D = parseFloat(document.getElementById('slide-D').value);
+        const p = parseFloat(document.getElementById('slide-p').value);
+
+        document.getElementById('val-A').innerText = A.toFixed(1);
+        document.getElementById('val-f').innerText = f.toFixed(1) + " Hz";
+        document.getElementById('val-phi').innerText = phi.toFixed(2) + " rad";
+        document.getElementById('val-D').innerText = D.toFixed(1);
+        document.getElementById('val-p').innerText = p % 1 === 0 ? p.toFixed(0) : p.toFixed(1);
+
+        const latexStr = `y(t) = ${A.toFixed(1)} \\cdot \\left( \\sin(2\\pi \\cdot ${f.toFixed(1)} \\cdot t + ${phi.toFixed(2)}) \\right)^{${p}} ${D >= 0 ? '+' : '-'} ${Math.abs(D).toFixed(1)}`;
+        katex.render(latexStr, document.getElementById('wave-math-dynamic'), { throwOnError: false, displayMode: true });
+
+        resizeCanvas(waveCanvas);
+        const w = waveCanvas.width, h = waveCanvas.height;
+        waveCtx.clearRect(0, 0, w, h);
+
+        // --- Compute actual y range for this parameter set ---
+        let yMin = Infinity, yMax = -Infinity;
+        const STEPS = w * 2;
+        const yVals = [];
+        for (let i = 0; i <= STEPS; i++) {
+            const t = i / STEPS;
+            const rawSin = Math.sin(2 * Math.PI * f * t + phi);
+            const y = A * signedPow(rawSin, p) + D;
+            if (isFinite(y)) { yMin = Math.min(yMin, y); yMax = Math.max(yMax, y); }
+            yVals.push(y);
+        }
+        // Pad 15% top/bottom so wave never touches edge
+        const range = (yMax - yMin) === 0 ? 2 : (yMax - yMin);
+        const pad = range * 0.18;
+        const yLow = yMin - pad;
+        const yHigh = yMax + pad;
+
+        const toCanvasY = (val) => h - ((val - yLow) / (yHigh - yLow)) * h;
+
+        // --- Draw Y-axis grid lines & labels ---
+        waveCtx.font = "11px monospace";
+        waveCtx.textAlign = "right";
+
+        // Nice round ticks
+        const nTicks = 6;
+        const tickStep = (yHigh - yLow) / nTicks;
+        const magnitude = Math.pow(10, Math.floor(Math.log10(Math.abs(tickStep) || 1)));
+        const niceStep = Math.ceil(tickStep / magnitude) * magnitude;
+        const firstTick = Math.ceil(yLow / niceStep) * niceStep;
+
+        for (let tick = firstTick; tick <= yHigh + 1e-9; tick += niceStep) {
+            const cy = toCanvasY(tick);
+            if (cy < 0 || cy > h) continue;
+
+            const isZero = Math.abs(tick) < niceStep * 0.01;
+            waveCtx.beginPath();
+            waveCtx.moveTo(38, cy);
+            waveCtx.lineTo(w, cy);
+            waveCtx.strokeStyle = isZero ? '#475569' : '#1e293b';
+            waveCtx.lineWidth = isZero ? 1.5 : 1;
+            waveCtx.setLineDash(isZero ? [] : [3, 4]);
+            waveCtx.stroke();
+            waveCtx.setLineDash([]);
+
+            waveCtx.fillStyle = isZero ? '#94a3b8' : '#64748b';
+            waveCtx.fillText(tick.toFixed(tick % 1 === 0 ? 0 : 1), 34, cy + 4);
+        }
+
+        // --- Draw DC offset (mean) reference line ---
+        const meanY = toCanvasY(D);
+        if (meanY >= 0 && meanY <= h) {
+            waveCtx.beginPath();
+            waveCtx.moveTo(38, meanY);
+            waveCtx.lineTo(w, meanY);
+            waveCtx.strokeStyle = '#f97316';
+            waveCtx.lineWidth = 1.5;
+            waveCtx.setLineDash([6, 4]);
+            waveCtx.stroke();
+            waveCtx.setLineDash([]);
+
+            waveCtx.fillStyle = '#f97316';
+            waveCtx.textAlign = "left";
+            waveCtx.font = "bold 10px monospace";
+            waveCtx.fillText(`D=${D.toFixed(1)}`, w - 60, meanY - 4);
+        }
+
+        // --- Draw wave ---
+        waveCtx.beginPath();
+        waveCtx.strokeStyle = '#60a5fa';
+        waveCtx.lineWidth = 2.5;
+        waveCtx.textAlign = "left";
+
+        let first = true;
+        for (let i = 0; i <= STEPS; i++) {
+            const x = (i / STEPS) * w;
+            const y = yVals[i];
+            if (!isFinite(y)) { first = true; continue; }
+            const cy = toCanvasY(y);
+            if (first) { waveCtx.moveTo(x, cy); first = false; }
+            else waveCtx.lineTo(x, cy);
+        }
+        waveCtx.stroke();
+
+        // --- Y-axis background strip ---
+        waveCtx.fillStyle = '#020617';
+        waveCtx.fillRect(0, 0, 36, h);
+    }
+
+    ['slide-A', 'slide-f', 'slide-phi', 'slide-D', 'slide-p'].forEach(id => {
+        document.getElementById(id).addEventListener('input', drawWave);
+    });
+
+
+    // ==================== MODULE 2: MOMENTS ====================
+    const momentCanvas = document.getElementById('moment-canvas');
+    const momentCtx = momentCanvas.getContext('2d');
+    
+    let customCsvData = null;
+
+    document.getElementById('csv-upload').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            const parsed = evt.target.result.split(/\r?\n/)
+                               .map(val => parseFloat(val.trim()))
+                               .filter(val => !isNaN(val));
+            if (parsed.length > 0) {
+                customCsvData = parsed;
+                document.getElementById('synthetic-controls').classList.add('hidden');
+                document.getElementById('csv-status').classList.remove('hidden');
+                document.getElementById('btn-clear-csv').classList.remove('hidden');
+                updateMoments();
+            } else {
+                alert("Could not parse numeric data from CSV.");
+            }
+        };
+        reader.readAsText(file);
+    });
+
+    document.getElementById('btn-clear-csv').addEventListener('click', function() {
+        customCsvData = null;
+        document.getElementById('csv-upload').value = '';
+        document.getElementById('synthetic-controls').classList.remove('hidden');
+        document.getElementById('csv-status').classList.add('hidden');
+        this.classList.add('hidden');
+        updateMoments();
+    });
+
+    function generateData() {
+        if (customCsvData) return customCsvData;
+        const N = parseInt(document.getElementById('slide-N').value);
+        const targetMean = parseFloat(document.getElementById('slide-mean').value);
+        const targetStd = parseFloat(document.getElementById('slide-std').value);
+        const outliers = parseFloat(document.getElementById('slide-outliers').value);
+        const asym = parseFloat(document.getElementById('slide-asym').value);
+
+        let rawData = [];
+        for (let i = 0; i < N; i++) {
+            let u = 0, v = 0;
+            while(u === 0) u = Math.random();
+            while(v === 0) v = Math.random();
+            let val = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+            if (val > 0) val += asym;
+            if (Math.random() < (outliers / 100)) val += (Math.random() > 0.5 ? 15 : -15);
+            rawData.push(val);
+        }
+        const currentMean = rawData.reduce((a, b) => a + b, 0) / N;
+        const currentVar = rawData.reduce((a, b) => a + Math.pow(b - currentMean, 2), 0) / N;
+        const currentStd = Math.sqrt(currentVar) + 1e-8;
+        return rawData.map(x => ((x - currentMean) / currentStd) * targetStd + targetMean);
+    }
+
+    function updateMoments() {
+        const p = parseInt(document.getElementById('slide-mp').value);
+        const k = parseInt(document.getElementById('slide-k').value);
+        
+        document.getElementById('val-mp').innerText = p;
+        document.getElementById('val-k').innerText = k;
+        
+        if (!customCsvData) {
+            document.getElementById('val-N').innerText = document.getElementById('slide-N').value;
+            document.getElementById('val-mean').innerText = parseFloat(document.getElementById('slide-mean').value).toFixed(1);
+            document.getElementById('val-std').innerText = parseFloat(document.getElementById('slide-std').value).toFixed(1);
+            document.getElementById('val-asym').innerText = parseFloat(document.getElementById('slide-asym').value).toFixed(1);
+            document.getElementById('val-outliers').innerText = document.getElementById('slide-outliers').value + '%';
+        }
+
+        const data = generateData();
+        const N = data.length;
+
+        const mu = data.reduce((a, b) => a + b, 0) / N;
+        const varianceRaw = data.reduce((a, b) => a + Math.pow(b - mu, 2), 0) / N;
+        const sigma = Math.sqrt(varianceRaw) + 1e-8; 
+
+        let momentSum = 0;
+        let c_sigma = (p === 2) ? 1 : sigma;
+        for (let i = 0; i < N; i++) {
+            momentSum += signedPow((data[i] - mu) / c_sigma, p);
+        }
+        
+        let result = momentSum / (N - k);
+        let isExcess = "";
+        if (p === 4) { result -= 3; isExcess = "- 3"; }
+
+        let momentName = "Variance (Spread)";
+        if (p === 3) momentName = "Skewness (Asymmetry)";
+        if (p === 4) momentName = "Excess Kurtosis (Impulsivity)";
+        
+        document.getElementById('moment-result').innerText = result.toFixed(3);
+        document.getElementById('moment-name-title').innerText = momentName;
+        document.getElementById('live-mu').innerText = mu.toFixed(2);
+        document.getElementById('live-sigma').innerText = sigma.toFixed(2);
+
+        const scaleLabel = p === 2 ? '1' : sigma.toFixed(2);
+        let latexStr = `M_{${p}} = \\frac{1}{${N} - ${k}} \\sum_{i=1}^{${N}} \\left( \\frac{x_i - (${mu.toFixed(2)})}{${scaleLabel}} \\right)^{${p}} ${isExcess}`;
+        katex.render(latexStr, document.getElementById('moment-math-dynamic'), { throwOnError: false, displayMode: true });
+
+        // ---- DRAW CHART ----
+        resizeCanvas(momentCanvas);
+        const w = momentCanvas.width;
+        const h = momentCanvas.height;
+        momentCtx.clearRect(0, 0, w, h);
+
+        const dataMin = Math.min(...data);
+        const dataMax = Math.max(...data);
+        const range = (dataMax - dataMin) === 0 ? 10 : (dataMax - dataMin); 
+        const yLow = dataMin - (range * 0.12);
+        const yHigh = dataMax + (range * 0.12);
+        const ySpan = yHigh - yLow;
+
+        const getY = (val) => h - ((val - yLow) / ySpan) * h;
+
+        // Y-axis ticks
+        momentCtx.font = "11px monospace";
+        momentCtx.textAlign = "right";
+        const nTicks = 6;
+        const tickStep = ySpan / nTicks;
+        const magnitude = Math.pow(10, Math.floor(Math.log10(Math.abs(tickStep) || 1)));
+        const niceStep = Math.ceil(tickStep / magnitude) * magnitude;
+        const firstTick = Math.ceil(yLow / niceStep) * niceStep;
+
+        for (let tick = firstTick; tick <= yHigh + 1e-9; tick += niceStep) {
+            const cy = getY(tick);
+            if (cy < 0 || cy > h) continue;
+            momentCtx.beginPath();
+            momentCtx.moveTo(42, cy);
+            momentCtx.lineTo(w, cy);
+            momentCtx.strokeStyle = '#1e293b';
+            momentCtx.lineWidth = 1;
+            momentCtx.setLineDash([3, 4]);
+            momentCtx.stroke();
+            momentCtx.setLineDash([]);
+            momentCtx.fillStyle = '#64748b';
+            const label = Math.abs(tick) < 1 ? tick.toFixed(1) : tick.toFixed(0);
+            momentCtx.fillText(label, 38, cy + 4);
+        }
+
+        // Sigma bands (dashed grey)
+        const sigmaColors = ['#334155', '#263245'];
+        [[mu + sigma, mu - sigma]].forEach(([hi, lo]) => {
+            const cyHi = getY(hi);
+            const cyLo = getY(lo);
+
+            // Fill band
+            momentCtx.fillStyle = 'rgba(51,65,85,0.18)';
+            momentCtx.fillRect(42, Math.min(cyHi, cyLo), w - 42, Math.abs(cyHi - cyLo));
+
+            // Dashed lines
+            [hi, lo].forEach(val => {
+                const cy = getY(val);
+                if (cy < 0 || cy > h) return;
+                momentCtx.beginPath();
+                momentCtx.moveTo(42, cy);
+                momentCtx.lineTo(w, cy);
+                momentCtx.strokeStyle = '#64748b';
+                momentCtx.lineWidth = 1;
+                momentCtx.setLineDash([4, 4]);
+                momentCtx.stroke();
+                momentCtx.setLineDash([]);
+            });
+
+            // Sigma labels
+            const labelVal = sigma.toFixed(2);
+            momentCtx.fillStyle = '#94a3b8';
+            momentCtx.textAlign = 'left';
+            momentCtx.font = '10px monospace';
+            if (getY(hi) > 4 && getY(hi) < h) momentCtx.fillText(`+1σ (${(mu+sigma).toFixed(1)})`, w - 90, getY(hi) - 3);
+            if (getY(lo) > 4 && getY(lo) < h) momentCtx.fillText(`-1σ (${(mu-sigma).toFixed(1)})`, w - 90, getY(lo) - 3);
+        });
+
+        // Mean line (solid orange) with label showing actual value
+        const meanY = getY(mu);
+        momentCtx.beginPath();
+        momentCtx.moveTo(42, meanY);
+        momentCtx.lineTo(w, meanY);
+        momentCtx.strokeStyle = '#f97316';
+        momentCtx.setLineDash([]);
+        momentCtx.lineWidth = 2;
+        momentCtx.stroke();
+
+        // Mean value label on the line
+        momentCtx.fillStyle = '#f97316';
+        momentCtx.textAlign = 'left';
+        momentCtx.font = 'bold 11px monospace';
+        momentCtx.fillText(`μ = ${mu.toFixed(2)}`, 46, meanY - 5);
+
+        // Data Signal
+        momentCtx.beginPath();
+        momentCtx.strokeStyle = '#10b981'; 
+        momentCtx.lineWidth = 1.5;
+        for (let i = 0; i < N; i++) {
+            const x = 42 + (i / (N - 1)) * (w - 42);
+            const canvasY = getY(data[i]);
+            if (i === 0) momentCtx.moveTo(x, canvasY);
+            else momentCtx.lineTo(x, canvasY);
+        }
+        momentCtx.stroke();
+
+        // Y-axis background strip
+        momentCtx.fillStyle = '#020617';
+        momentCtx.fillRect(0, 0, 40, h);
+    }
+
+    const mod2Sliders = ['slide-mp', 'slide-k', 'slide-N', 'slide-mean', 'slide-std', 'slide-outliers', 'slide-asym'];
+    mod2Sliders.forEach(id => {
+        document.getElementById(id).addEventListener('input', updateMoments);
+    });
+
+    window.onload = () => {
+        renderInlineMath();
+        drawWave();
+        updateMoments();
+        window.addEventListener('resize', () => { drawWave(); updateMoments(); });
+    };
+</script>
+</body>
+</html>
